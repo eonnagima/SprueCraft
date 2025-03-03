@@ -1,35 +1,129 @@
 using UnityEngine;
+using UnityEditor;
 
-public class RuntimePainter : MonoBehaviour {
+public class RuntimePainter : MonoBehaviour
+{
     public Camera cam;
     public RenderTexture paintTexture;
     public Material paintMaterial;
     public Color paintColor = Color.red;
-    public float brushSize = 0.05f;
+    public float brushSize = 0.01f; // Adjust brush size
 
-    private void Update() {
-        if (Input.GetMouseButton(0)) {
+    private Texture2D canvasTexture;
+    private Texture2D brushTexture;
+
+    void Start()
+    {
+        if (paintTexture == null)
+        {
+            Debug.LogError("Paint Texture is missing! Assign a Render Texture in the Inspector.");
+            return;
+        }
+
+        // Ensure the Render Texture is active before use
+        RenderTexture.active = paintTexture;
+
+        // Create a blank canvas texture matching Render Texture size
+        canvasTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
+        ClearCanvas();
+
+        // Ensure paintMaterial is assigned
+        if (paintMaterial == null)
+        {
+            Debug.LogError("Paint Material is missing! Assign a material in the Inspector.");
+            return;
+        }
+
+        // Assign the RenderTexture to the shader's _PaintTex
+        paintMaterial.SetTexture("_PaintTex", paintTexture);
+
+        Debug.Log("Runtime Painter initialized successfully.");
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButton(0)) // Left click to paint
+        {
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit)) {
-                Paint(hit);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                ApplyPaint(hit);
             }
         }
     }
 
-    void Paint(RaycastHit hit) {
+    void ApplyPaint(RaycastHit hit)
+    {
+        if (canvasTexture == null)
+        {
+            Debug.LogError("Canvas Texture is not initialized!");
+            return;
+        }
+
+        if (paintTexture == null)
+        {
+            Debug.LogError("Paint Texture is missing!");
+            return;
+        }
+
         Vector2 uv = hit.textureCoord;
-        RenderTexture.active = paintTexture;
 
-        Texture2D brush = new Texture2D(1, 1);
-        brush.SetPixel(0, 0, paintColor);
-        brush.Apply();
+        // Ensure UV coordinates are valid
+        if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
+        {
+            Debug.LogWarning("Invalid UV coordinates detected!");
+            return;
+        }
 
-        GL.PushMatrix();
-        GL.LoadPixelMatrix(0, paintTexture.width, paintTexture.height, 0);
-        Graphics.DrawTexture(new Rect(uv.x * paintTexture.width - brushSize * 512, uv.y * paintTexture.height - brushSize * 512, brushSize * 1024, brushSize * 1024), brush);
-        GL.PopMatrix();
+        int x = (int)(uv.x * canvasTexture.width);
+        int y = (int)(uv.y * canvasTexture.height);
 
-        RenderTexture.active = null;
-        Destroy(brush);
+        for (int i = -8; i < 8; i++)
+        {
+            for (int j = -8; j < 8; j++)
+            {
+                int brushX = Mathf.Clamp(x + i, 0, canvasTexture.width - 1);
+                int brushY = Mathf.Clamp(y + j, 0, canvasTexture.height - 1);
+                canvasTexture.SetPixel(brushX, brushY, paintColor);
+            }
+        }
+
+        canvasTexture.Apply();
+        Graphics.Blit(canvasTexture, paintTexture);
+    }
+
+    public void ClearCanvas()
+    {
+        if (canvasTexture == null) return;
+
+        Color[] clearColors = new Color[canvasTexture.width * canvasTexture.height];
+        for (int i = 0; i < clearColors.Length; i++)
+            clearColors[i] = Color.clear;
+
+        canvasTexture.SetPixels(clearColors);
+        canvasTexture.Apply();
+        Graphics.Blit(canvasTexture, paintTexture);
+    }
+
+    // Clears paint when the game stops in the Editor
+    void OnApplicationQuit()
+    {
+        ResetPaintTexture();
+    }
+
+#if UNITY_EDITOR
+    void OnDisable()
+    {
+        if (!Application.isPlaying)
+        {
+            ResetPaintTexture();
+        }
+    }
+#endif
+
+    private void ResetPaintTexture()
+    {
+        Debug.Log("Resetting paint texture...");
+        ClearCanvas();
     }
 }
