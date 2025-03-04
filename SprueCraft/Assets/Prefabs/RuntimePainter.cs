@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEditor;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class RuntimePainter : MonoBehaviour
 {
@@ -11,6 +11,9 @@ public class RuntimePainter : MonoBehaviour
 
     private Texture2D canvasTexture;
     private Texture2D brushTexture;
+
+    public XRController leftController;
+    public XRController rightController;
 
     void Start()
     {
@@ -42,9 +45,18 @@ public class RuntimePainter : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButton(0)) // Left click to paint
+        if (leftController.inputDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool leftTriggerPressed) && leftTriggerPressed)
         {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            Ray ray = new Ray(leftController.transform.position, leftController.transform.forward);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                ApplyPaint(hit);
+            }
+        }
+
+        if (rightController.inputDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool rightTriggerPressed) && rightTriggerPressed)
+        {
+            Ray ray = new Ray(rightController.transform.position, rightController.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 ApplyPaint(hit);
