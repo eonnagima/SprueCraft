@@ -13,8 +13,8 @@ public class RuntimePainter : MonoBehaviour
     private Texture2D canvasTexture;
     private Texture2D brushTexture;
 
-    public XRController leftController;
-    public XRController rightController;
+    public ActionBasedController leftController;
+    public ActionBasedController rightController;
 
     void Start()
     {
@@ -42,11 +42,22 @@ public class RuntimePainter : MonoBehaviour
         paintMaterial.SetTexture("_PaintTex", paintTexture);
 
         Debug.Log("Runtime Painter initialized successfully.");
+
+        // Disable the "XR Device Simulator UI(Clone)" canvas if VR is enabled
+        Canvas[] canvases = FindObjectsOfType<Canvas>();
+        foreach (Canvas canvas in canvases)
+        {
+            if (canvas.name == "XR Device Simulator UI(Clone)" && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            {
+                canvas.gameObject.SetActive(false);
+                Debug.Log("Disabled XR Device Simulator UI(Clone) canvas to avoid rendering cost in VR.");
+            }
+        }
     }
 
     void Update()
     {
-        if (leftController.inputDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool leftTriggerPressed) && leftTriggerPressed)
+        if (leftController != null && leftController.selectAction.action != null && leftController.selectAction.action.ReadValue<float>() > 0.1f)
         {
             Ray ray = new Ray(leftController.transform.position, leftController.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit))
@@ -54,14 +65,22 @@ public class RuntimePainter : MonoBehaviour
                 ApplyPaint(hit);
             }
         }
+        else
+        {
+            Debug.LogWarning("Left controller is not assigned or not valid.");
+        }
 
-        if (rightController.inputDevice.TryGetFeatureValue(CommonUsages.triggerButton, out bool rightTriggerPressed) && rightTriggerPressed)
+        if (rightController != null && rightController.selectAction.action != null && rightController.selectAction.action.ReadValue<float>() > 0.1f)
         {
             Ray ray = new Ray(rightController.transform.position, rightController.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
                 ApplyPaint(hit);
             }
+        }
+        else
+        {
+            Debug.LogWarning("Right controller is not assigned or not valid.");
         }
     }
 
