@@ -3,7 +3,12 @@ guid: 8e2ba1f603f465b47ab48683742783dc
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - cam: {instanceID: 0}
+  - paintTexture: {fileID: 8400000, guid: f3359c7a337eb0e49baaaa76e4ceeb30, type: 2}
+  - paintMaterial: {fileID: 2100000, guid: eecaa3198cbebd74e8cd79d0f71765cc, type: 2}
+  - leftController: {instanceID: 0}
+  - rightController: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
