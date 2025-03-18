@@ -6,7 +6,7 @@ public class RuntimePainter : MonoBehaviour
 {
     public Camera cam;
     public RenderTexture paintTexture;
-    public Material paintMaterial;
+    public Material paintMaterial; // Assign this material in the Inspector
     public Color paintColor = Color.red;
     public float brushSize = 0.01f; // Adjust brush size
 
@@ -38,9 +38,6 @@ public class RuntimePainter : MonoBehaviour
             return;
         }
 
-        // Assign the RenderTexture to the shader's _PaintTex
-        paintMaterial.SetTexture("_PaintTex", paintTexture);
-
         Debug.Log("Runtime Painter initialized successfully.");
 
         // Disable the "XR Device Simulator UI(Clone)" canvas if VR is enabled
@@ -52,6 +49,17 @@ public class RuntimePainter : MonoBehaviour
                 canvas.gameObject.SetActive(false);
                 Debug.Log("Disabled XR Device Simulator UI(Clone) canvas to avoid rendering cost in VR.");
             }
+        }
+
+        // Create paintable textures for each object with a Renderer component
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            Material newMaterial = new Material(renderer.sharedMaterial);
+            Texture2D newTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
+            ClearTexture(newTexture);
+            newMaterial.SetTexture("_PaintTex", newTexture);
+            renderer.material = newMaterial;
         }
     }
 
@@ -86,15 +94,18 @@ public class RuntimePainter : MonoBehaviour
 
     void ApplyPaint(RaycastHit hit)
     {
-        if (canvasTexture == null)
+        Renderer renderer = hit.collider.GetComponent<Renderer>();
+        if (renderer == null)
         {
-            Debug.LogError("Canvas Texture is not initialized!");
+            Debug.LogError("Hit object does not have a Renderer component!");
             return;
         }
 
-        if (paintTexture == null)
+        Material material = renderer.material;
+        Texture2D texture = material.GetTexture("_PaintTex") as Texture2D;
+        if (texture == null)
         {
-            Debug.LogError("Paint Texture is missing!");
+            Debug.LogError("Hit object does not have a paintable texture!");
             return;
         }
 
@@ -107,21 +118,21 @@ public class RuntimePainter : MonoBehaviour
             return;
         }
 
-        int x = (int)(uv.x * canvasTexture.width);
-        int y = (int)(uv.y * canvasTexture.height);
+        int x = (int)(uv.x * texture.width);
+        int y = (int)(uv.y * texture.height);
 
         for (int i = -8; i < 8; i++)
         {
             for (int j = -8; j < 8; j++)
             {
-                int brushX = Mathf.Clamp(x + i, 0, canvasTexture.width - 1);
-                int brushY = Mathf.Clamp(y + j, 0, canvasTexture.height - 1);
-                canvasTexture.SetPixel(brushX, brushY, paintColor);
+                int brushX = Mathf.Clamp(x + i, 0, texture.width - 1);
+                int brushY = Mathf.Clamp(y + j, 0, texture.height - 1);
+                texture.SetPixel(brushX, brushY, paintColor);
             }
         }
 
-        canvasTexture.Apply();
-        Graphics.Blit(canvasTexture, paintTexture);
+        texture.Apply();
+        Debug.Log("Applied paint at UV: " + uv);
     }
 
     public void ClearCanvas()
@@ -135,6 +146,16 @@ public class RuntimePainter : MonoBehaviour
         canvasTexture.SetPixels(clearColors);
         canvasTexture.Apply();
         Graphics.Blit(canvasTexture, paintTexture);
+    }
+
+    private void ClearTexture(Texture2D texture)
+    {
+        Color[] clearColors = new Color[texture.width * texture.height];
+        for (int i = 0; i < clearColors.Length; i++)
+            clearColors[i] = Color.clear;
+
+        texture.SetPixels(clearColors);
+        texture.Apply();
     }
 
     // Clears paint when the game stops in the Editor
