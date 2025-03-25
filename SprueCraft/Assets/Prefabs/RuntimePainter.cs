@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.UI;
 
 public class RuntimePainter : MonoBehaviour
 {
@@ -15,6 +16,12 @@ public class RuntimePainter : MonoBehaviour
 
     public ActionBasedController leftController;
     public ActionBasedController rightController;
+
+    // UI elements for VR interaction
+    public Slider brushSizeSlider;
+    public Slider redSlider; // Slider for Red component
+    public Slider greenSlider; // Slider for Green component
+    public Slider blueSlider; // Slider for Blue component
 
     void Start()
     {
@@ -40,27 +47,8 @@ public class RuntimePainter : MonoBehaviour
 
         Debug.Log("Runtime Painter initialized successfully.");
 
-        // Disable the "XR Device Simulator UI(Clone)" canvas if VR is enabled
-        Canvas[] canvases = FindObjectsOfType<Canvas>();
-        foreach (Canvas canvas in canvases)
-        {
-            if (canvas.name == "XR Device Simulator UI(Clone)" && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                canvas.gameObject.SetActive(false);
-                Debug.Log("Disabled XR Device Simulator UI(Clone) canvas to avoid rendering cost in VR.");
-            }
-        }
-
-        // Create paintable textures for each object with a Renderer component
-        Renderer[] renderers = FindObjectsOfType<Renderer>();
-        foreach (Renderer renderer in renderers)
-        {
-            Material newMaterial = new Material(renderer.sharedMaterial);
-            Texture2D newTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
-            ClearTexture(newTexture);
-            newMaterial.SetTexture("_PaintTex", newTexture);
-            renderer.material = newMaterial;
-        }
+        // Initialize UI elements for brush customization
+        InitializeUI();
     }
 
     void Update()
@@ -73,10 +61,6 @@ public class RuntimePainter : MonoBehaviour
                 ApplyPaint(hit);
             }
         }
-        else
-        {
-            Debug.LogWarning("Left controller is not assigned or not valid.");
-        }
 
         if (rightController != null && rightController.selectAction.action != null && rightController.selectAction.action.ReadValue<float>() > 0.1f)
         {
@@ -85,10 +69,6 @@ public class RuntimePainter : MonoBehaviour
             {
                 ApplyPaint(hit);
             }
-        }
-        else
-        {
-            Debug.LogWarning("Right controller is not assigned or not valid.");
         }
     }
 
@@ -111,19 +91,13 @@ public class RuntimePainter : MonoBehaviour
 
         Vector2 uv = hit.textureCoord;
 
-        // Ensure UV coordinates are valid
-        if (uv.x < 0 || uv.x > 1 || uv.y < 0 || uv.y > 1)
-        {
-            Debug.LogWarning("Invalid UV coordinates detected!");
-            return;
-        }
-
         int x = (int)(uv.x * texture.width);
         int y = (int)(uv.y * texture.height);
 
-        for (int i = -8; i < 8; i++)
+        int brushRadius = Mathf.CeilToInt(brushSize * texture.width);
+        for (int i = -brushRadius; i < brushRadius; i++)
         {
-            for (int j = -8; j < 8; j++)
+            for (int j = -brushRadius; j < brushRadius; j++)
             {
                 int brushX = Mathf.Clamp(x + i, 0, texture.width - 1);
                 int brushY = Mathf.Clamp(y + j, 0, texture.height - 1);
@@ -132,7 +106,6 @@ public class RuntimePainter : MonoBehaviour
         }
 
         texture.Apply();
-        Debug.Log("Applied paint at UV: " + uv);
     }
 
     public void ClearCanvas()
@@ -148,35 +121,64 @@ public class RuntimePainter : MonoBehaviour
         Graphics.Blit(canvasTexture, paintTexture);
     }
 
-    private void ClearTexture(Texture2D texture)
+    // Initialize UI elements for brush customization
+    private void InitializeUI()
     {
-        Color[] clearColors = new Color[texture.width * texture.height];
-        for (int i = 0; i < clearColors.Length; i++)
-            clearColors[i] = Color.clear;
-
-        texture.SetPixels(clearColors);
-        texture.Apply();
-    }
-
-    // Clears paint when the game stops in the Editor
-    void OnApplicationQuit()
-    {
-        ResetPaintTexture();
-    }
-
-#if UNITY_EDITOR
-    void OnDisable()
-    {
-        if (!Application.isPlaying)
+        if (brushSizeSlider != null)
         {
-            ResetPaintTexture();
+            brushSizeSlider.value = brushSize;
+            brushSizeSlider.onValueChanged.AddListener(SetBrushSize);
+        }
+
+        if (redSlider != null)
+        {
+            redSlider.value = paintColor.r;
+            redSlider.onValueChanged.AddListener(SetRedValue);
+        }
+
+        if (greenSlider != null)
+        {
+            greenSlider.value = paintColor.g;
+            greenSlider.onValueChanged.AddListener(SetGreenValue);
+        }
+
+        if (blueSlider != null)
+        {
+            blueSlider.value = paintColor.b;
+            blueSlider.onValueChanged.AddListener(SetBlueValue);
         }
     }
-#endif
 
-    private void ResetPaintTexture()
+    // Set brush size
+    public void SetBrushSize(float newSize)
     {
-        Debug.Log("Resetting paint texture...");
-        ClearCanvas();
+        brushSize = Mathf.Max(0.001f, newSize); // Prevent zero or negative size
+    }
+
+    // Set Red component of the color
+    public void SetRedValue(float value)
+    {
+        paintColor.r = value;
+        UpdateBrushColor();
+    }
+
+    // Set Green component of the color
+    public void SetGreenValue(float value)
+    {
+        paintColor.g = value;
+        UpdateBrushColor();
+    }
+
+    // Set Blue component of the color
+    public void SetBlueValue(float value)
+    {
+        paintColor.b = value;
+        UpdateBrushColor();
+    }
+
+    // Update the brush color
+    private void UpdateBrushColor()
+    {
+        Debug.Log("Updated brush color: " + paintColor);
     }
 }
