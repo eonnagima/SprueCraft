@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.UI;
 
 public class RuntimePainter : MonoBehaviour
 {
@@ -12,16 +11,9 @@ public class RuntimePainter : MonoBehaviour
     public float brushSize = 0.01f; // Adjust brush size
 
     private Texture2D canvasTexture;
-    private Texture2D brushTexture;
 
     public ActionBasedController leftController;
     public ActionBasedController rightController;
-
-    // UI elements for VR interaction
-    public Slider brushSizeSlider;
-    public Button redButton; // Button for Red color
-    public Button greenButton; // Button for Green color
-    public Button blueButton; // Button for Blue color
 
     void Start()
     {
@@ -36,7 +28,6 @@ public class RuntimePainter : MonoBehaviour
 
         // Create a blank canvas texture matching Render Texture size
         canvasTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
-        ClearCanvas();
 
         // Ensure paintMaterial is assigned
         if (paintMaterial == null)
@@ -45,35 +36,48 @@ public class RuntimePainter : MonoBehaviour
             return;
         }
 
-        Debug.Log("Runtime Painter initialized successfully.");
+        // Assign the paint texture to the material
+        paintMaterial.SetTexture("_PaintTex", paintTexture);
 
-        // Initialize UI elements for brush customization
-        InitializeUI();
+        Debug.Log("Runtime Painter initialized successfully.");
     }
 
     void Update()
     {
+        // Check the left controller
         if (leftController != null && leftController.selectAction.action != null && leftController.selectAction.action.ReadValue<float>() > 0.1f)
         {
             Ray ray = new Ray(leftController.transform.position, leftController.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                ApplyPaint(hit);
+                // Only paint if the object is not being grabbed
+                XRGrabInteractable grabInteractable = hit.collider.GetComponent<XRGrabInteractable>();
+                if (grabInteractable == null || !grabInteractable.isSelected)
+                {
+                    ApplyPaint(hit);
+                }
             }
         }
 
+        // Check the right controller
         if (rightController != null && rightController.selectAction.action != null && rightController.selectAction.action.ReadValue<float>() > 0.1f)
         {
             Ray ray = new Ray(rightController.transform.position, rightController.transform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                ApplyPaint(hit);
+                // Only paint if the object is not being grabbed
+                XRGrabInteractable grabInteractable = hit.collider.GetComponent<XRGrabInteractable>();
+                if (grabInteractable == null || !grabInteractable.isSelected)
+                {
+                    ApplyPaint(hit);
+                }
             }
         }
     }
 
     void ApplyPaint(RaycastHit hit)
     {
+        // Get the Renderer component from the hit object
         Renderer renderer = hit.collider.GetComponent<Renderer>();
         if (renderer == null)
         {
@@ -81,81 +85,68 @@ public class RuntimePainter : MonoBehaviour
             return;
         }
 
-        Material material = renderer.material;
-        Texture2D texture = material.GetTexture("_PaintTex") as Texture2D;
-        if (texture == null)
+        // Ensure the object has a unique material instance
+        Material material = renderer.material; // This creates a unique material instance for the object
+
+        // Check if the material has the '_PaintTex' property
+        if (!material.HasProperty("_PaintTex"))
         {
-            Debug.LogError("Hit object does not have a paintable texture!");
+            Debug.LogError($"Material on object '{hit.collider.name}' does not have a '_PaintTex' property!");
             return;
         }
 
+        // Check if the material already has a unique RenderTexture
+        RenderTexture objectTexture = material.GetTexture("_PaintTex") as RenderTexture;
+        if (objectTexture == null)
+        {
+            // Create a new RenderTexture for this object
+            objectTexture = new RenderTexture(paintTexture.width, paintTexture.height, 0, RenderTextureFormat.ARGB32);
+            objectTexture.Create();
+
+            // Assign the new RenderTexture to the material
+            material.SetTexture("_PaintTex", objectTexture);
+        }
+
+        // Use the object's unique RenderTexture for painting
+        RenderTexture.active = objectTexture;
+
+        // Get the UV coordinates of the hit point
         Vector2 uv = hit.textureCoord;
 
-        int x = (int)(uv.x * texture.width);
-        int y = (int)(uv.y * texture.height);
+        // Convert UV coordinates to pixel coordinates
+        int x = (int)(uv.x * canvasTexture.width);
+        int y = (int)(uv.y * canvasTexture.height);
 
-        int brushRadius = Mathf.CeilToInt(brushSize * texture.width);
+        // Paint a circular area around the hit point
+        int brushRadius = Mathf.CeilToInt(brushSize * canvasTexture.width);
         for (int i = -brushRadius; i < brushRadius; i++)
         {
             for (int j = -brushRadius; j < brushRadius; j++)
             {
-                int brushX = Mathf.Clamp(x + i, 0, texture.width - 1);
-                int brushY = Mathf.Clamp(y + j, 0, texture.height - 1);
-                texture.SetPixel(brushX, brushY, paintColor);
+                int brushX = Mathf.Clamp(x + i, 0, canvasTexture.width - 1);
+                int brushY = Mathf.Clamp(y + j, 0, canvasTexture.height - 1);
+
+                // Check if the pixel is within the brush radius
+                if (Vector2.Distance(new Vector2(x, y), new Vector2(brushX, brushY)) <= brushRadius)
+                {
+                    canvasTexture.SetPixel(brushX, brushY, paintColor);
+                }
             }
         }
 
-        texture.Apply();
-    }
-
-    public void ClearCanvas()
-    {
-        if (canvasTexture == null) return;
-
-        Color[] clearColors = new Color[canvasTexture.width * canvasTexture.height];
-        for (int i = 0; i < clearColors.Length; i++)
-            clearColors[i] = Color.clear;
-
-        canvasTexture.SetPixels(clearColors);
+        // Apply the changes to the canvas texture
         canvasTexture.Apply();
-        Graphics.Blit(canvasTexture, paintTexture);
+
+        // Copy the updated canvas texture to the object's RenderTexture
+        Graphics.Blit(canvasTexture, objectTexture);
+
+        // Reset the active RenderTexture
+        RenderTexture.active = null;
     }
 
-    // Initialize UI elements for brush customization
-    private void InitializeUI()
+    // Reset the paint texture when exiting Play Mode
+    void OnDisable()
     {
-        if (brushSizeSlider != null)
-        {
-            brushSizeSlider.value = brushSize;
-            brushSizeSlider.onValueChanged.AddListener(SetBrushSize);
-        }
-
-        if (redButton != null)
-        {
-            redButton.onClick.AddListener(() => SetBrushColor(Color.red));
-        }
-
-        if (greenButton != null)
-        {
-            greenButton.onClick.AddListener(() => SetBrushColor(Color.green));
-        }
-
-        if (blueButton != null)
-        {
-            blueButton.onClick.AddListener(() => SetBrushColor(Color.blue));
-        }
-    }
-
-    // Set brush size
-    public void SetBrushSize(float newSize)
-    {
-        brushSize = Mathf.Max(0.001f, newSize); // Prevent zero or negative size
-    }
-
-    // Set brush color
-    public void SetBrushColor(Color newColor)
-    {
-        paintColor = newColor;
-        Debug.Log("Brush color changed to: " + newColor);
+        Debug.Log("Exiting Play Mode.");
     }
 }
