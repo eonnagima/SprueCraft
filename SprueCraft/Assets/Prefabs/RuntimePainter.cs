@@ -19,9 +19,9 @@ public class RuntimePainter : MonoBehaviour
 
     // UI elements for VR interaction
     public Slider brushSizeSlider;
-    public Slider redSlider; // Slider for Red component
-    public Slider greenSlider; // Slider for Green component
-    public Slider blueSlider; // Slider for Blue component
+    public Button redButton; // Button for Red color
+    public Button greenButton; // Button for Green color
+    public Button blueButton; // Button for Blue color
 
     void Start()
     {
@@ -130,22 +130,19 @@ public class RuntimePainter : MonoBehaviour
             brushSizeSlider.onValueChanged.AddListener(SetBrushSize);
         }
 
-        if (redSlider != null)
+        if (redButton != null)
         {
-            redSlider.value = paintColor.r;
-            redSlider.onValueChanged.AddListener(SetRedValue);
+            redButton.onClick.AddListener(() => SetBrushColor(Color.red));
         }
 
-        if (greenSlider != null)
+        if (greenButton != null)
         {
-            greenSlider.value = paintColor.g;
-            greenSlider.onValueChanged.AddListener(SetGreenValue);
+            greenButton.onClick.AddListener(() => SetBrushColor(Color.green));
         }
 
-        if (blueSlider != null)
+        if (blueButton != null)
         {
-            blueSlider.value = paintColor.b;
-            blueSlider.onValueChanged.AddListener(SetBlueValue);
+            blueButton.onClick.AddListener(() => SetBrushColor(Color.blue));
         }
     }
 
@@ -155,30 +152,10 @@ public class RuntimePainter : MonoBehaviour
         brushSize = Mathf.Max(0.001f, newSize); // Prevent zero or negative size
     }
 
-    // Set Red component of the color
-    public void SetRedValue(float value)
+    // Set brush color
+    public void SetBrushColor(Color newColor)
     {
-        paintColor.r = value;
-        UpdateBrushColor();
-    }
-
-    // Set Green component of the color
-    public void SetGreenValue(float value)
-    {
-        paintColor.g = value;
-        UpdateBrushColor();
-    }
-
-    // Set Blue component of the color
-    public void SetBlueValue(float value)
-    {
-        paintColor.b = value;
-        UpdateBrushColor();
-    }
-
-    // Update the brush color
-    private void UpdateBrushColor()
-    {
-        Debug.Log("Updated brush color: " + paintColor);
+        paintColor = newColor;
+        Debug.Log("Brush color changed to: " + newColor);
     }
 }
