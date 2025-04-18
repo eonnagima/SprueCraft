@@ -11,7 +11,11 @@ TagManager:
   - Interactable
   - Water
   - UI
+<<<<<<< Updated upstream
   - Paintable
+=======
+  - NoCollision
+>>>>>>> Stashed changes
   - 
   - 
   - 
