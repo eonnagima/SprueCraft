@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.InputSystem;
 
 public class RuntimePainter : MonoBehaviour
 {
@@ -12,8 +13,11 @@ public class RuntimePainter : MonoBehaviour
 
     private Texture2D canvasTexture;
 
-    public ActionBasedController leftController;
-    public ActionBasedController rightController;
+    public InputActionProperty leftTriggerAction;
+    public InputActionProperty rightTriggerAction;
+
+    private bool leftTriggerPreviouslyPressed = false;
+    private bool rightTriggerPreviouslyPressed = false;
 
     void Start()
     {
@@ -44,32 +48,62 @@ public class RuntimePainter : MonoBehaviour
 
     void Update()
     {
-        // Check the left controller
-        if (leftController != null && leftController.selectAction.action != null && leftController.selectAction.action.ReadValue<float>() > 0.1f)
+        // Left trigger input
+        if (leftTriggerAction != null)
         {
-            Ray ray = new Ray(leftController.transform.position, leftController.transform.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            bool leftTriggerPressed = leftTriggerAction.action.ReadValue<float>() > 0.1f;
+
+            if (leftTriggerPressed && !leftTriggerPreviouslyPressed)
             {
-                // Only paint if the object is not being grabbed
-                XRGrabInteractable grabInteractable = hit.collider.GetComponent<XRGrabInteractable>();
-                if (grabInteractable == null || !grabInteractable.isSelected)
+                Debug.Log("Left trigger pressed");
+                leftTriggerPreviouslyPressed = true;  // Update state
+            }
+            else if (!leftTriggerPressed && leftTriggerPreviouslyPressed)
+            {
+                Debug.Log("Left trigger released");
+                leftTriggerPreviouslyPressed = false;  // Update state
+            }
+
+            if (leftTriggerPressed)
+            {
+                Ray ray = new Ray(cam.transform.position, cam.transform.forward);  // Use the camera's position and forward direction as a reference
+                if (Physics.Raycast(ray, out RaycastHit hit))
                 {
-                    ApplyPaint(hit);
+                    Debug.Log("Hit object: " + hit.collider.name); // Log the object hit
+                    if (hit.collider.GetComponent<MeshRenderer>() != null)
+                    {
+                        ApplyPaint(hit);
+                    }
                 }
             }
         }
 
-        // Check the right controller
-        if (rightController != null && rightController.selectAction.action != null && rightController.selectAction.action.ReadValue<float>() > 0.1f)
+        // Right trigger input
+        if (rightTriggerAction != null)
         {
-            Ray ray = new Ray(rightController.transform.position, rightController.transform.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            bool rightTriggerPressed = rightTriggerAction.action.ReadValue<float>() > 0.1f;
+
+            if (rightTriggerPressed && !rightTriggerPreviouslyPressed)
             {
-                // Only paint if the object is not being grabbed
-                XRGrabInteractable grabInteractable = hit.collider.GetComponent<XRGrabInteractable>();
-                if (grabInteractable == null || !grabInteractable.isSelected)
+                Debug.Log("Right trigger pressed");
+                rightTriggerPreviouslyPressed = true;  // Update state
+            }
+            else if (!rightTriggerPressed && rightTriggerPreviouslyPressed)
+            {
+                Debug.Log("Right trigger released");
+                rightTriggerPreviouslyPressed = false;  // Update state
+            }
+
+            if (rightTriggerPressed)
+            {
+                Ray ray = new Ray(cam.transform.position, cam.transform.forward);  // Use the camera's position and forward direction as a reference
+                if (Physics.Raycast(ray, out RaycastHit hit))
                 {
-                    ApplyPaint(hit);
+                    Debug.Log("Hit object: " + hit.collider.name); // Log the object hit
+                    if (hit.collider.GetComponent<MeshRenderer>() != null)
+                    {
+                        ApplyPaint(hit);
+                    }
                 }
             }
         }
