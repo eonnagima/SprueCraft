@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 public class RuntimePainter : MonoBehaviour
 {
     public Camera cam;
-    public RenderTexture paintTexture;
+    public RenderTexture paintTexture; // Used as a template for creating new textures
     public Material paintMaterial; // Assign this material in the Inspector
     public Color paintColor = Color.red;
     public float brushSize = 0.01f; // Adjust brush size
@@ -27,21 +27,8 @@ public class RuntimePainter : MonoBehaviour
             return;
         }
 
-        // Ensure the Render Texture is active before use
-        RenderTexture.active = paintTexture;
-
         // Create a blank canvas texture matching Render Texture size
         canvasTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
-
-        // Ensure paintMaterial is assigned
-        if (paintMaterial == null)
-        {
-            Debug.LogError("Paint Material is missing! Assign a material in the Inspector.");
-            return;
-        }
-
-        // Assign the paint texture to the material
-        paintMaterial.SetTexture("_PaintTex", paintTexture);
 
         Debug.Log("Runtime Painter initialized successfully.");
     }
@@ -55,26 +42,7 @@ public class RuntimePainter : MonoBehaviour
 
             if (leftTriggerPressed && !leftTriggerPreviouslyPressed)
             {
-                Debug.Log("Left trigger pressed");
-                leftTriggerPreviouslyPressed = true;  // Update state
-            }
-            else if (!leftTriggerPressed && leftTriggerPreviouslyPressed)
-            {
-                Debug.Log("Left trigger released");
-                leftTriggerPreviouslyPressed = false;  // Update state
-            }
-
-            if (leftTriggerPressed)
-            {
-                Ray ray = new Ray(cam.transform.position, cam.transform.forward);  // Use the camera's position and forward direction as a reference
-                if (Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    Debug.Log("Hit object: " + hit.collider.name); // Log the object hit
-                    if (hit.collider.GetComponent<MeshRenderer>() != null)
-                    {
-                        ApplyPaint(hit);
-                    }
-                }
+                ApplyPaint(hit);
             }
         }
 
@@ -85,26 +53,7 @@ public class RuntimePainter : MonoBehaviour
 
             if (rightTriggerPressed && !rightTriggerPreviouslyPressed)
             {
-                Debug.Log("Right trigger pressed");
-                rightTriggerPreviouslyPressed = true;  // Update state
-            }
-            else if (!rightTriggerPressed && rightTriggerPreviouslyPressed)
-            {
-                Debug.Log("Right trigger released");
-                rightTriggerPreviouslyPressed = false;  // Update state
-            }
-
-            if (rightTriggerPressed)
-            {
-                Ray ray = new Ray(cam.transform.position, cam.transform.forward);  // Use the camera's position and forward direction as a reference
-                if (Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    Debug.Log("Hit object: " + hit.collider.name); // Log the object hit
-                    if (hit.collider.GetComponent<MeshRenderer>() != null)
-                    {
-                        ApplyPaint(hit);
-                    }
-                }
+                ApplyPaint(hit);
             }
         }
     }
@@ -139,6 +88,8 @@ public class RuntimePainter : MonoBehaviour
 
             // Assign the new RenderTexture to the material
             material.SetTexture("_PaintTex", objectTexture);
+
+            Debug.Log($"Created a new RenderTexture for object '{hit.collider.name}'.");
         }
 
         // Use the object's unique RenderTexture for painting
@@ -176,11 +127,5 @@ public class RuntimePainter : MonoBehaviour
 
         // Reset the active RenderTexture
         RenderTexture.active = null;
-    }
-
-    // Reset the paint texture when exiting Play Mode
-    void OnDisable()
-    {
-        Debug.Log("Exiting Play Mode.");
     }
 }
