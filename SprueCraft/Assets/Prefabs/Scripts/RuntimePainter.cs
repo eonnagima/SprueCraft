@@ -35,6 +35,9 @@ public class RuntimePainter : MonoBehaviour
 
     void Update()
     {
+        Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0));
+        RaycastHit hit;
+
         // Left trigger input
         if (leftTriggerAction != null)
         {
@@ -42,8 +45,13 @@ public class RuntimePainter : MonoBehaviour
 
             if (leftTriggerPressed && !leftTriggerPreviouslyPressed)
             {
-                ApplyPaint(hit);
+                if (Physics.Raycast(ray, out hit))
+                {
+                    ApplyPaint(hit);
+                }
             }
+
+            leftTriggerPreviouslyPressed = leftTriggerPressed;
         }
 
         // Right trigger input
@@ -53,8 +61,13 @@ public class RuntimePainter : MonoBehaviour
 
             if (rightTriggerPressed && !rightTriggerPreviouslyPressed)
             {
-                ApplyPaint(hit);
+                if (Physics.Raycast(ray, out hit))
+                {
+                    ApplyPaint(hit);
+                }
             }
+
+            rightTriggerPreviouslyPressed = rightTriggerPressed;
         }
     }
 
@@ -69,7 +82,7 @@ public class RuntimePainter : MonoBehaviour
         }
 
         // Ensure the object has a unique material instance
-        Material material = renderer.material; // This creates a unique material instance for the object
+        Material material = renderer.material;
 
         // Check if the material has the '_PaintTex' property
         if (!material.HasProperty("_PaintTex"))
@@ -111,7 +124,6 @@ public class RuntimePainter : MonoBehaviour
                 int brushX = Mathf.Clamp(x + i, 0, canvasTexture.width - 1);
                 int brushY = Mathf.Clamp(y + j, 0, canvasTexture.height - 1);
 
-                // Check if the pixel is within the brush radius
                 if (Vector2.Distance(new Vector2(x, y), new Vector2(brushX, brushY)) <= brushRadius)
                 {
                     canvasTexture.SetPixel(brushX, brushY, paintColor);
@@ -119,13 +131,11 @@ public class RuntimePainter : MonoBehaviour
             }
         }
 
-        // Apply the changes to the canvas texture
         canvasTexture.Apply();
 
         // Copy the updated canvas texture to the object's RenderTexture
         Graphics.Blit(canvasTexture, objectTexture);
 
-        // Reset the active RenderTexture
         RenderTexture.active = null;
     }
 }
