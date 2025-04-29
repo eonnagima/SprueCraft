@@ -1345,6 +1345,9 @@ MonoBehaviour:
   paintMaterial: {fileID: 2100000, guid: 04d35b75becc611478fa0ae32b3e489e, type: 2}
   paintColor: {r: 0.28930575, g: 0.6754716, b: 0.48943925, a: 1}
   brushSize: 0.5
+  paintableLayers:
+    serializedVersion: 2
+    m_Bits: 64
   leftTriggerAction:
     m_UseReference: 0
     m_Action:
@@ -1997,7 +2000,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4767330746540676757}
   - component: {fileID: 2141643838}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HeadContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2062,7 +2065,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8349648549450358942}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: CrotchContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2790,7 +2793,7 @@ GameObject:
   - component: {fileID: 8748445752131861469}
   - component: {fileID: 6023414413073797811}
   - component: {fileID: 4394327141898544281}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GundamTorso
   m_TagString: Untagged
   m_Icon: {fileID: 0}
