@@ -4180,12 +4180,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1065372353}
   m_Layer: 0
-  m_Name: Tutorial Screen
+  m_Name: TutorialScreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1065372353
 Transform:
   m_ObjectHideFlags: 0
@@ -4195,7 +4195,7 @@ Transform:
   m_GameObject: {fileID: 1065372352}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.6657, y: 8.9178, z: -120.77}
+  m_LocalPosition: {x: 6.6657, y: 4.73, z: -120.77}
   m_LocalScale: {x: 1.8415, y: 1.8415, z: 1.8415}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7827,6 +7827,7 @@ GameObject:
   - component: {fileID: 1877577108}
   - component: {fileID: 1877577107}
   - component: {fileID: 1877577106}
+  - component: {fileID: 1877577109}
   m_Layer: 5
   m_Name: Return btn
   m_TagString: Untagged
@@ -7842,7 +7843,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1877577104}
   m_LocalRotation: {x: 0.0026999451, y: -0.7120133, z: -0.002589778, w: 0.702156}
-  m_LocalPosition: {x: 0, y: 0, z: -1.39}
+  m_LocalPosition: {x: 0, y: 0, z: -1.4}
   m_LocalScale: {x: 0.01743646, y: 0.01743646, z: 0.01743646}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7851,7 +7852,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0.006, y: -90.799, z: -0.429}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 2.38, y: 0.02}
+  m_AnchoredPosition: {x: 2.38, y: 0.21}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1877577106
@@ -7897,7 +7898,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1877577107}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1877577109}
+        m_TargetAssemblyTypeName: TutorialOpener, Assembly-CSharp
+        m_MethodName: CloseTutorial
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1877577107
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7936,6 +7949,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1877577104}
   m_CullTransparentMesh: 1
+--- !u!114 &1877577109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1877577104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5578d0405fe8444f9a2ebb749b0a4ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TutorialScreen: {fileID: 1065372352}
 --- !u!1001 &1887378177
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9350,8 +9376,9 @@ GameObject:
   - component: {fileID: 2093229967}
   - component: {fileID: 2093229966}
   - component: {fileID: 2093229965}
+  - component: {fileID: 2093229968}
   m_Layer: 5
-  m_Name: Tutorial btn
+  m_Name: Tutorialbtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9420,7 +9447,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2093229966}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2093229968}
+        m_TargetAssemblyTypeName: TutorialOpener, Assembly-CSharp
+        m_MethodName: OpenTutorial
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &2093229966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9459,6 +9498,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2093229963}
   m_CullTransparentMesh: 1
+--- !u!114 &2093229968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2093229963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5578d0405fe8444f9a2ebb749b0a4ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TutorialScreen: {fileID: 1065372352}
 --- !u!1 &2109438269
 GameObject:
   m_ObjectHideFlags: 0
