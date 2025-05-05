@@ -53,6 +53,42 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.19889069, y: 0.078042746, z: 0.061346054}
   m_Center: {x: -0.00074005127, y: 0.011207938, z: 0.007004738}
+--- !u!1 &2169766461412423599
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
+  m_PrefabInstance: {fileID: 1359496409975753470}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1537803030118493461}
+  - component: {fileID: 4753538081443663342}
+  - component: {fileID: 1994579096756466540}
+  m_Layer: 0
+  m_Name: 'GundamLowerArmR (Missing Prefab with guid: 95e27ae47abc140b6b1e318a7d9859ff)'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1537803030118493461
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
+  m_PrefabInstance: {fileID: 1359496409975753470}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2169766461412423599}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0.00000005210733, z: 0.00000009828779, w: 0.7071067}
+  m_LocalPosition: {x: -0.2539997, y: -1.1069996, z: 0.13399982}
+  m_LocalScale: {x: 10, y: 10, z: 10}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 712278425255867132}
+  - {fileID: 2896145244854362153}
+  - {fileID: 3616604860136430092}
+  m_Father: {fileID: 8809450951891738353}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2837611105833305644
 GameObject:
   m_ObjectHideFlags: 0
@@ -444,13 +480,13 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3616604860136430092}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 712278425255867132}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2896145244854362153}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3616604860136430092}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
       insertIndex: -1
@@ -459,16 +495,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1994579096756466540}
   m_SourcePrefab: {fileID: 100100000, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
---- !u!4 &1537803030118493461 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
-  m_PrefabInstance: {fileID: 1359496409975753470}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2169766461412423599 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 95e27ae47abc140b6b1e318a7d9859ff, type: 3}
-  m_PrefabInstance: {fileID: 1359496409975753470}
-  m_PrefabAsset: {fileID: 0}
 --- !u!54 &4753538081443663342
 Rigidbody:
   m_ObjectHideFlags: 0

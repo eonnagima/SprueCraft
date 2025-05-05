@@ -1,9 +1,9 @@
-Shader "Custom/PaintableShader"
+Shader "Custom/RuntimePaintShader"
 {
     Properties
     {
         _MainTex ("Base Texture", 2D) = "white" {} // The base texture of the object
-        _PaintTex ("Paint Texture", 2D) = "white" {} // The paint texture
+        _PaintTex ("Paint Texture", 2D) = "white" {} // The paint texture (updated dynamically)
         _Color ("Color Tint", Color) = (1,1,1,1) // Optional color tint
     }
     SubShader
@@ -12,7 +12,7 @@ Shader "Custom/PaintableShader"
         LOD 200
 
         CGPROGRAM
-        #pragma surface surf Standard
+        #pragma surface surf Standard fullforwardshadows
 
         sampler2D _MainTex; // Base texture
         sampler2D _PaintTex; // Paint texture
@@ -31,7 +31,7 @@ Shader "Custom/PaintableShader"
             // Sample the paint texture
             fixed4 paintColor = tex2D(_PaintTex, IN.uv_MainTex);
 
-            // Blend the base texture and paint texture using the alpha channel of the paint texture
+            // Blend the base texture and paint texture
             fixed4 finalColor = lerp(baseColor, paintColor, paintColor.a);
 
             // Apply the final color to the surface
@@ -40,5 +40,5 @@ Shader "Custom/PaintableShader"
         }
         ENDCG
     }
-    FallBack "Diffuse"
+    FallBack "Standard"
 }

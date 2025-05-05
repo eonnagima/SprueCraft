@@ -1,141 +1,139 @@
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class RuntimePainter : MonoBehaviour
 {
-    public Camera cam;
-    public RenderTexture paintTexture; // Used as a template for creating new textures
-    public Material paintMaterial; // Assign this material in the Inspector
-    public Color paintColor = Color.red;
-    public float brushSize = 0.01f; // Adjust brush size
+    public Camera vrCamera; // Reference to the VR camera
+    public LayerMask paintableLayer; // Layer mask for "Paintable" objects
+    public RenderTexture paintTexture; // RenderTexture for painting
+    public Color brushColor = Color.red; // Default brush color
+    public float brushSize = 0.1f; // Default brush size
 
-    private Texture2D canvasTexture;
+    // Commented out XR controller-related fields
+    // public XRController rightHandController; // Reference to the right-hand XR controller
+    // public InputHelpers.Button paintButton = InputHelpers.Button.Trigger; // Button for painting
+    // public InputHelpers.Button colorChangeButton = InputHelpers.Button.Grip; // Button for changing color
 
-    public InputActionProperty leftTriggerAction;
-    public InputActionProperty rightTriggerAction;
+    private Material paintMaterial; // Material used for painting
+    private int colorIndex = 0; // Index to cycle through colors
 
-    private bool leftTriggerPreviouslyPressed = false;
-    private bool rightTriggerPreviouslyPressed = false;
+    private readonly Color[] colors = { Color.red, Color.green, Color.blue }; // Available colors
 
     void Start()
     {
-        if (paintTexture == null)
+        // Initialize the paint material
+        if (paintTexture != null)
         {
-            Debug.LogError("Paint Texture is missing! Assign a Render Texture in the Inspector.");
-            return;
+            paintMaterial = new Material(Shader.Find("Custom/RuntimePainterShader"));
+            paintMaterial.mainTexture = paintTexture;
         }
-
-        // Create a blank canvas texture matching Render Texture size
-        canvasTexture = new Texture2D(paintTexture.width, paintTexture.height, TextureFormat.RGBA32, false);
-
-        Debug.Log("Runtime Painter initialized successfully.");
+        else
+        {
+            Debug.LogError("RenderTexture is not assigned. Please assign a RenderTexture in the inspector.");
+        }
     }
 
     void Update()
     {
-        Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0));
-        RaycastHit hit;
-
-        // Left trigger input
-        if (leftTriggerAction != null)
+        // Check if the left mouse button is pressed (simulating the paint button)
+        if (Input.GetMouseButton(0)) // Left mouse button
         {
-            bool leftTriggerPressed = leftTriggerAction.action.ReadValue<float>() > 0.1f;
-
-            if (leftTriggerPressed && !leftTriggerPreviouslyPressed)
-            {
-                if (Physics.Raycast(ray, out hit))
-                {
-                    ApplyPaint(hit);
-                }
-            }
-
-            leftTriggerPreviouslyPressed = leftTriggerPressed;
+            Paint();
         }
 
-        // Right trigger input
-        if (rightTriggerAction != null)
+        // Change brush color when the right mouse button is pressed (simulating the color change button)
+        if (Input.GetMouseButtonDown(1)) // Right mouse button
         {
-            bool rightTriggerPressed = rightTriggerAction.action.ReadValue<float>() > 0.1f;
+            CycleBrushColor();
+        }
 
-            if (rightTriggerPressed && !rightTriggerPreviouslyPressed)
+        // Adjust brush size using the scroll wheel
+        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+        brushSize = Mathf.Clamp(brushSize + scrollInput * 0.1f, 0.01f, 1.0f);
+        Debug.Log("Brush Size: " + brushSize);
+    }
+
+    void Paint()
+    {
+        // Cast a ray from the VR camera's forward direction (simulating XR Simulator input)
+        Ray ray = new Ray(vrCamera.transform.position, vrCamera.transform.forward);
+
+        Debug.Log("Ray Origin: " + ray.origin + ", Direction: " + ray.direction);
+        Debug.DrawRay(ray.origin, ray.direction * 100, Color.red, 2.0f); // Visualize the ray
+
+        // Increase the raycast distance to 1000 units
+        float raycastDistance = 1000f;
+
+        if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, paintableLayer))
+        {
+            Debug.Log("Hit Object: " + hit.collider.gameObject.name);
+
+            // Check for Renderer component
+            Renderer renderer = hit.collider.GetComponent<Renderer>();
+            if (renderer == null)
             {
-                if (Physics.Raycast(ray, out hit))
-                {
-                    ApplyPaint(hit);
-                }
+                // Try to find the Renderer on the parent object
+                renderer = hit.collider.GetComponentInParent<Renderer>();
             }
 
-            rightTriggerPreviouslyPressed = rightTriggerPressed;
+            if (renderer != null)
+            {
+                Debug.Log("Material Shader: " + renderer.material.shader.name);
+
+                // Get UV coordinates of the hit point
+                Vector2 uv = hit.textureCoord;
+                Debug.Log("UV Coordinates: " + uv);
+
+                if (uv == Vector2.zero)
+                {
+                    Debug.LogWarning("UV coordinates are (0.00, 0.00). Check the object's UV mapping and collider setup.");
+                    return;
+                }
+
+                // Set brush properties
+                paintMaterial.SetColor("_Color", brushColor);
+                paintMaterial.SetFloat("_BrushSize", brushSize);
+                Debug.Log("Brush Size: " + brushSize);
+
+                // Paint on the texture
+                Debug.Log("Setting Render Target...");
+                if (paintTexture == null)
+                {
+                    Debug.LogError("RenderTexture is not assigned.");
+                    return;
+                }
+
+                Graphics.SetRenderTarget(paintTexture);
+                GL.PushMatrix();
+                GL.LoadOrtho();
+                paintMaterial.SetPass(0);
+                GL.Begin(GL.QUADS);
+                GL.Color(brushColor);
+                GL.TexCoord2(uv.x - brushSize, uv.y - brushSize); GL.Vertex3(0, 0, 0);
+                GL.TexCoord2(uv.x + brushSize, uv.y - brushSize); GL.Vertex3(1, 0, 0);
+                GL.TexCoord2(uv.x + brushSize, uv.y + brushSize); GL.Vertex3(1, 1, 0);
+                GL.TexCoord2(uv.x - brushSize, uv.y + brushSize); GL.Vertex3(0, 1, 0);
+                GL.End();
+                GL.PopMatrix();
+                Graphics.SetRenderTarget(null);
+                Debug.Log("Render Target Cleared.");
+            }
+            else
+            {
+                Debug.LogWarning("The object hit by the raycast does not have a Renderer component.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No object hit by the ray.");
         }
     }
 
-    void ApplyPaint(RaycastHit hit)
+    void CycleBrushColor()
     {
-        // Get the Renderer component from the hit object
-        Renderer renderer = hit.collider.GetComponent<Renderer>();
-        if (renderer == null)
-        {
-            Debug.LogError("Hit object does not have a Renderer component!");
-            return;
-        }
-
-        // Ensure the object has a unique material instance
-        Material material = renderer.material;
-
-        // Check if the material has the '_PaintTex' property
-        if (!material.HasProperty("_PaintTex"))
-        {
-            Debug.LogError($"Material on object '{hit.collider.name}' does not have a '_PaintTex' property!");
-            return;
-        }
-
-        // Check if the material already has a unique RenderTexture
-        RenderTexture objectTexture = material.GetTexture("_PaintTex") as RenderTexture;
-        if (objectTexture == null)
-        {
-            // Create a new RenderTexture for this object
-            objectTexture = new RenderTexture(paintTexture.width, paintTexture.height, 0, RenderTextureFormat.ARGB32);
-            objectTexture.Create();
-
-            // Assign the new RenderTexture to the material
-            material.SetTexture("_PaintTex", objectTexture);
-
-            Debug.Log($"Created a new RenderTexture for object '{hit.collider.name}'.");
-        }
-
-        // Use the object's unique RenderTexture for painting
-        RenderTexture.active = objectTexture;
-
-        // Get the UV coordinates of the hit point
-        Vector2 uv = hit.textureCoord;
-
-        // Convert UV coordinates to pixel coordinates
-        int x = (int)(uv.x * canvasTexture.width);
-        int y = (int)(uv.y * canvasTexture.height);
-
-        // Paint a circular area around the hit point
-        int brushRadius = Mathf.CeilToInt(brushSize * canvasTexture.width);
-        for (int i = -brushRadius; i < brushRadius; i++)
-        {
-            for (int j = -brushRadius; j < brushRadius; j++)
-            {
-                int brushX = Mathf.Clamp(x + i, 0, canvasTexture.width - 1);
-                int brushY = Mathf.Clamp(y + j, 0, canvasTexture.height - 1);
-
-                if (Vector2.Distance(new Vector2(x, y), new Vector2(brushX, brushY)) <= brushRadius)
-                {
-                    canvasTexture.SetPixel(brushX, brushY, paintColor);
-                }
-            }
-        }
-
-        canvasTexture.Apply();
-
-        // Copy the updated canvas texture to the object's RenderTexture
-        Graphics.Blit(canvasTexture, objectTexture);
-
-        RenderTexture.active = null;
+        colorIndex = (colorIndex + 1) % colors.Length;
+        brushColor = colors[colorIndex];
     }
 }
