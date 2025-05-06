@@ -1,7 +1,5 @@
 using UnityEngine;
-using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit;
-using System.Collections.Generic;
 
 public class RuntimePainter : MonoBehaviour
 {
@@ -11,13 +9,9 @@ public class RuntimePainter : MonoBehaviour
     public Color brushColor = Color.red; // Default brush color
     public float brushSize = 0.1f; // Default brush size
 
-    // Commented out XR controller-related fields
-    // public XRController rightHandController; // Reference to the right-hand XR controller
-    // public InputHelpers.Button paintButton = InputHelpers.Button.Trigger; // Button for painting
-    // public InputHelpers.Button colorChangeButton = InputHelpers.Button.Grip; // Button for changing color
-
     private Material paintMaterial; // Material used for painting
     private int colorIndex = 0; // Index to cycle through colors
+    public ActionBasedController rightHandController; // Reference to the right-hand Action-Based Controller
 
     private readonly Color[] colors = { Color.red, Color.green, Color.blue }; // Available colors
 
@@ -26,7 +20,7 @@ public class RuntimePainter : MonoBehaviour
         // Initialize the paint material
         if (paintTexture != null)
         {
-            paintMaterial = new Material(Shader.Find("Custom/RuntimePainterShader"));
+            paintMaterial = new Material(Shader.Find("Custom/RuntimePaintShader"));
             paintMaterial.mainTexture = paintTexture;
         }
         else
@@ -37,22 +31,25 @@ public class RuntimePainter : MonoBehaviour
 
     void Update()
     {
-        // Check if the left mouse button is pressed (simulating the paint button)
-        if (Input.GetMouseButton(0)) // Left mouse button
+        // Check if the right-hand controller is assigned
+        if (rightHandController != null)
         {
-            Paint();
-        }
+            // Check if the trigger button is pressed
+            if (rightHandController.activateAction.action?.triggered == true)
+            {
+                Paint();
+            }
 
-        // Change brush color when the right mouse button is pressed (simulating the color change button)
-        if (Input.GetMouseButtonDown(1)) // Right mouse button
+            // Check if the grip button is pressed
+            if (rightHandController.selectAction.action?.triggered == true)
+            {
+                CycleBrushColor();
+            }
+        }
+        else
         {
-            CycleBrushColor();
+            Debug.LogWarning("Right-hand controller is not assigned.");
         }
-
-        // Adjust brush size using the scroll wheel
-        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
-        brushSize = Mathf.Clamp(brushSize + scrollInput * 0.1f, 0.01f, 1.0f);
-        Debug.Log("Brush Size: " + brushSize);
     }
 
     void Paint()
@@ -135,5 +132,6 @@ public class RuntimePainter : MonoBehaviour
     {
         colorIndex = (colorIndex + 1) % colors.Length;
         brushColor = colors[colorIndex];
+        Debug.Log("Brush color changed to: " + brushColor);
     }
 }
